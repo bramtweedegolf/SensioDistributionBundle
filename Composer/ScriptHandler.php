@@ -334,9 +334,6 @@ EOF
           ];
         }
 
-        var_dump($commandArray);
-        exit;
-
         $process = new Process(
             $commandArray,
             null,
