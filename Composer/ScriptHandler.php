@@ -324,10 +324,26 @@ EOF
             $useNewDirectoryStructure = ProcessExecutor::escape('--use-new-directory-structure');
         }
 
-        var_dump(getcwd());
+        if ($phpArgs) {
+          $commandArray = [
+            $php, $phpArgs, $cmd, $bootstrapDir, $autoloadDir, $useNewDirectoryStructure, getcwd()
+          ];
+        } else {
+          $commandArray = [
+            $php, $cmd, $bootstrapDir, $autoloadDir, $useNewDirectoryStructure, getcwd()
+          ];
+        }
+
+        var_dump($commandArray);
         exit;
 
-        $process = new Process($php.($phpArgs ? ' '.$phpArgs : '').' '.$cmd.' '.$bootstrapDir.' '.$autoloadDir.' '.$useNewDirectoryStructure, getcwd(), null, null, $timeout);
+        $process = new Process(
+            $commandArray,
+            null,
+            null,
+            $timeout
+        );
+
         $process->run(function ($type, $buffer) use ($event) { $event->getIO()->write($buffer, false); });
         if (!$process->isSuccessful()) {
             throw new \RuntimeException('An error occurred when generating the bootstrap file.');
