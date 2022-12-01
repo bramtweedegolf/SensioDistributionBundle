@@ -288,7 +288,24 @@ EOF
             $console .= ' --ansi';
         }
 
-        $process = new Process($php.($phpArgs ? ' '.$phpArgs : '').' '.$console.' '.$cmd, null, null, null, $timeout);
+        if ($phpArgs) {
+          $commandArray = [
+            $php, $phpArgs, $console, $cmd
+          ];
+        } else {
+          $commandArray = [
+            $php, $console, $cmd
+          ];
+        }
+
+        $process = new Process(
+            $commandArray,
+            null,
+            null,
+            null,
+            $timeout
+        );
+
         $process->run(function ($type, $buffer) use ($event) { $event->getIO()->write($buffer, false); });
         if (!$process->isSuccessful()) {
             throw new \RuntimeException(sprintf("An error occurred when executing the \"%s\" command:\n\n%s\n\n%s", ProcessExecutor::escape($cmd), self::removeDecoration($process->getOutput()), self::removeDecoration($process->getErrorOutput())));
@@ -306,6 +323,9 @@ EOF
         if (static::useNewDirectoryStructure(static::getOptions($event))) {
             $useNewDirectoryStructure = ProcessExecutor::escape('--use-new-directory-structure');
         }
+
+        var_dump(getcwd());
+        exit;
 
         $process = new Process($php.($phpArgs ? ' '.$phpArgs : '').' '.$cmd.' '.$bootstrapDir.' '.$autoloadDir.' '.$useNewDirectoryStructure, getcwd(), null, null, $timeout);
         $process->run(function ($type, $buffer) use ($event) { $event->getIO()->write($buffer, false); });
