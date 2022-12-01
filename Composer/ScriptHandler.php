@@ -290,26 +290,28 @@ EOF
 
         if ($phpArgs) {
           $commandArray = [
-            $php, $phpArgs, $console, $cmd
+            self::x($console), self::x($cmd)
           ];
         } else {
           $commandArray = [
-            $php, $console, $cmd
+            self::x($console), self::x($cmd)
           ];
         }
 
-        $process = new Process(
-            $commandArray,
-            null,
-            null,
-            null,
-            $timeout
-        );
+        $str = self::x($php);
+        $str = $str . ' ' . self::x($phpArgs);
+        $str = $str . ' ' . self::x($console);
+        $str = $str . ' ' . self::x($cmd);
 
-        $process->run(function ($type, $buffer) use ($event) { $event->getIO()->write($buffer, false); });
-        if (!$process->isSuccessful()) {
-            throw new \RuntimeException(sprintf("An error occurred when executing the \"%s\" command:\n\n%s\n\n%s", ProcessExecutor::escape($cmd), self::removeDecoration($process->getOutput()), self::removeDecoration($process->getErrorOutput())));
+        $result = exec($str, $output);
+
+        if ($result === false) {
+            throw new \RuntimeException('An error occurred when generating the bootstrap file.');
         }
+    }
+
+    private static function x($arg) {
+        return str_replace("'", "", $arg);
     }
 
     protected static function executeBuildBootstrap(Event $event, $bootstrapDir, $autoloadDir, $timeout = 300)
@@ -324,25 +326,17 @@ EOF
             $useNewDirectoryStructure = ProcessExecutor::escape('--use-new-directory-structure');
         }
 
-        if ($phpArgs) {
-          $commandArray = [
-            $php, $phpArgs, $cmd, $bootstrapDir, $autoloadDir, $useNewDirectoryStructure, getcwd()
-          ];
-        } else {
-          $commandArray = [
-            $php, $cmd, $bootstrapDir, $autoloadDir, $useNewDirectoryStructure, getcwd()
-          ];
-        }
+        $str = self::x($php);
+        $str = $str . ' ' . self::x($phpArgs);
+        $str = $str . ' ' . self::x($cmd);
+        $str = $str . ' ' . self::x($bootstrapDir);
+        $str = $str . ' ' . self::x($autoloadDir);
+        $str = $str . ' ' . self::x($useNewDirectoryStructure);
+        $str = $str . ' ' . getcwd();
 
-        $process = new Process(
-            $commandArray,
-            null,
-            null,
-            $timeout
-        );
+        $result = exec($str, $output);
 
-        $process->run(function ($type, $buffer) use ($event) { $event->getIO()->write($buffer, false); });
-        if (!$process->isSuccessful()) {
+        if ($result === false) {
             throw new \RuntimeException('An error occurred when generating the bootstrap file.');
         }
     }
